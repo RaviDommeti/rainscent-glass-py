@@ -44,8 +44,8 @@ sorted_cp = vendor_cp.sort_index(axis=1)
 sorted_hsil = vendor_hsil.sort_index(axis=1)
 sorted_liverleaf = vendor_liverleaf.sort_index(axis=1)
 
-# result_final = pds.concat([sorted_hsil,sorted_liverleaf])
-# result_final = pds.concat([result_final,sorted_cp])
+result_final = pds.concat([sorted_hsil,sorted_liverleaf])
+result_final = pds.concat([result_final,sorted_cp])
 
 # print("\n\tSorted Vendor CP")
 # print(sorted_cp.head())
