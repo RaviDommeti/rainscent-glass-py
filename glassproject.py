@@ -13,7 +13,7 @@ vendor_liverleaf =pds.read_excel('SAMPLE Account 1.xlsx',sheet_name = 'LIVER LEA
 
 #clean HSIL containing empty Columns
 vendor_hsil = vendor_hsil.dropna(axis=1,how='all')
-vendor_hsil.to_excel('Clean Col HSIL.xlsx')
+#vendor_hsil.to_excel('Clean Col HSIL.xlsx')
 
 #Clean Liver leaf with containing empty columns
 vendor_liverleaf = vendor_liverleaf.dropna(axis=1,how='all')
