@@ -23,7 +23,7 @@ vendor_liverleaf = vendor_liverleaf.dropna(axis=1,how='all')
 vendor_liverleaf = vendor_liverleaf.dropna(how='all')
 #vendor_liverleaf.to_excel('Clean Row Liver Leaf.xlsx')
 
-# #for deleting empty rows
+#for deleting empty rows
 # clean_row_cp = vendor_cp.dropna(how='all')
 # clean_row_hsil = vendor_hsil.dropna(how='all')
 # clean_row_liverleaf = vendor_liverleaf.dropna(how='all')
