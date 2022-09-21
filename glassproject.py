@@ -39,6 +39,11 @@ vendor_liverleaf = vendor_liverleaf.dropna(how='all')
 # vendor_hsil.to_excel('Clean Col HSIL.xlsx')
 # vendor_liverleaf.to_excel('Clean Col Liver Leaf.xlsx')
 
+# Adding source column
+vendor_cp['Source'] = 'CP'
+vendor_hsil['Source'] = 'HSIL'
+vendor_liverleaf['Source'] = 'Liver Leaf'
+
 #Sorting based on columns in ascending order
 sorted_cp = vendor_cp.sort_index(axis=1)
 sorted_hsil = vendor_hsil.sort_index(axis=1)
