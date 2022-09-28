@@ -11,6 +11,10 @@ account_file = pds.read_excel('ACCOUNT_PAYMENT_BANK.xlsx')
 # print("\n\tVendor LIVER LEAF")
 # print(vendor_liverleaf.head())
 
+#clean CP containing empty Columns
+vendor_cp = vendor_cp.dropna(axis=1,how='all')
+vendor_cp.to_excel('Clean Col CP.xlsx')
+#print("\n\n\t\t Vendor CP\n",vendor_cp)
 
 #clean HSIL containing empty Columns
 vendor_hsil = vendor_hsil.dropna(axis=1,how='all')
@@ -46,19 +50,24 @@ vendor_hsil['SOURCE'] = 'HSIL'
 vendor_liverleaf['SOURCE'] = 'Liver Leaf'
 
 #------------------------------RENAMING AND PROCESSING CP-------------------------------------
-# renamed_cp = vendor_liverleaf.rename(columns = {'Material Description' : 'MATERIAL','Truck No' : 'TRUCK NO','Received Date' : 'DATE','Challan No.':'DC NO','ACC Qty' : 'ACC QTY','DED Qty' : 'DED QTY'},inplace = False)
-# print("\n\t\t Renamed LIVERLEAF\n",renamed_cp)
-# #Adding new column "REC QTY" . REC QTY = ACC QTY + DED QTY
-# renamed_cp['REC QTY'] = renamed_cp['ACC QTY'] + renamed_cp['DED QTY']
+#renamed_cp = vendor_liverleaf.rename(columns = {'Material Description' : 'MATERIAL','Truck No' : 'TRUCK NO','Received Date' : 'DATE','Challan No.':'DC NO','ACC Qty' : 'ACC QTY','DED Qty' : 'DED QTY'},inplace = False)
+# print("\n\n\t\t Columns of Vendor CP\n")
+# print(list(vendor_cp))
+renamed_cp = vendor_cp.rename(columns = {'ACC Qty' : 'ACC QTY'},inplace = False)
+# print("\n\n\t\t Columns of Vendor CP\n")
+# print(list(vendor_cp))
+# print("\n\t\t Renamed CP\n",renamed_cp)
+# #Adding new column "DED QTY" . DED QTY = (REC QTY/1000) - ACC QTY
+renamed_cp['REC QTY'] = renamed_cp['REC QTY'] / 1000
+renamed_cp['DED QTY'] = renamed_cp['REC QTY'] - renamed_cp['ACC QTY']
 # #Selecting only required columns
-# renamed_cp = renamed_cp[['MATERIAL','TRUCK NO','DATE','DC NO','ACC QTY','DED QTY','REC QTY']]
-# renamed_cp.to_excel('Renamed LIVERLEAF.xlsx')
+renamed_cp = renamed_cp[['SOURCE','MATERIAL','TRUCK NO','DATE','DC NO','ACC QTY','DED QTY','REC QTY']]
+renamed_cp.to_excel('Renamed CP.xlsx')
 
 #------------------------------RENAMING AND PROCESSING HSIL-------------------------------------
-
 #Renaming columns of HSIL to match required output format
 renamed_hsil = vendor_hsil.rename(columns = {'Material' : 'MATERIAL','Truck No' : 'TRUCK NO','GR Date' : 'DATE','SUP DN No':'DC NO','ACC Qty' : 'ACC QTY','DED Qty' : 'DED QTY'},inplace = False)
-print("\n\t\t Renamed HSIL\n",renamed_hsil)
+#print("\n\t\t Renamed HSIL\n",renamed_hsil)
 #Adding new column "REC QTY" . REC QTY = ACC QTY + DED QTY
 renamed_hsil['REC QTY'] = renamed_hsil['ACC QTY'] + renamed_hsil['DED QTY']
 #Selecting only required columns
@@ -67,22 +76,38 @@ renamed_hsil.to_excel('Renamed HSIL.xlsx')
 
 #------------------------------RENAMING AND PROCESSING LIVERLEAF-------------------------------------
 renamed_liverleaf = vendor_liverleaf.rename(columns = {'Material' : 'MATERIAL','Truck No' : 'TRUCK NO','GR Date' : 'DATE','SUP DN No':'DC NO','ACC Qty' : 'ACC QTY','DED Qty' : 'DED QTY'},inplace = False)
-print("\n\t\t Renamed LIVERLEAF\n",renamed_liverleaf)
+#print("\n\t\t Renamed LIVERLEAF\n",renamed_liverleaf)
 #Adding new column "REC QTY" . REC QTY = ACC QTY + DED QTY
 renamed_liverleaf['REC QTY'] = renamed_liverleaf['ACC QTY'] + renamed_liverleaf['DED QTY']
 #Selecting only required columns
 renamed_liverleaf = renamed_liverleaf[['SOURCE','MATERIAL','TRUCK NO','DATE','DC NO','ACC QTY','DED QTY','REC QTY']]
 renamed_liverleaf.to_excel('Renamed LIVERLEAF.xlsx')
-#---------------------------------------------------------------------------------------------------
-#Sorting based on columns in ascending order
-#sorted_cp = renamwd_cp.sort_index(axis=1)
+
+#-------------------------------SORTING COLUMNS IN ASCENDING ORDER-------------------------------------
 sorted_hsil = renamed_hsil.sort_index(axis=1)
 sorted_liverleaf = renamed_liverleaf.sort_index(axis=1)
+sorted_cp = renamed_cp.sort_index(axis=1)
 
-#Merging HSIL and LIVER Leaf for easy comparison
+#------------------------------MERGING ALL THE VENDORS-------------------------------------
+#Merging HSIL and LIVER Leaf
 hsil_liverleaf = pds.concat([sorted_hsil,sorted_liverleaf])
-hsil_liverleaf = hsil_liverleaf[['SOURCE','MATERIAL','TRUCK NO','DATE','DC NO','ACC QTY','DED QTY','REC QTY']]
-hsil_liverleaf.to_excel("Merged HSIL LLeaf.xlsx")
+#Sorting above file based on columns
+sorted_hsil_liverleaf = hsil_liverleaf.sort_index(axis=1)
+#Merging above file( merged HSIL & Liverleaf) with Sorted CP
+vendors_consolidated = pds.concat([sorted_hsil_liverleaf,sorted_cp])
+#Retrieve only required columns in the order mentioned
+vendors_consolidated = vendors_consolidated[['SOURCE','MATERIAL','TRUCK NO','DATE','DC NO','ACC QTY','DED QTY','REC QTY']]
+vendors_consolidated.to_excel("Vendors Consolidated.xlsx")
+
+print("\n\t\t Columns of Condolidated Vendors \n",list(vendors_consolidated))
+print("\n\t\t Columns of Accounts \n",list(account_file))
+# Column TRUCK NO has two spaces after it in ACCOUNT PAYMENT BANK file, so removing spaces
+renamed_account_file = account_file.rename(columns = {'TRUCK NO  ' : 'TRUCK NO'},inplace = False)
+
+print("\n\t\t Columns of Renamed Accounts \n",list(renamed_account_file))
+# Performing Inner Join of ACCOUNTS_PAYMENTS_BANK with VENDORS CONSOLIDATED based on DC NO, TRUCK NO, DATE
+joinedData = vendors_consolidated.merge(renamed_account_file, how="inner", on=['TRUCK NO','DATE'])
+joinedData.to_excel("Final Output.xlsx")
 
 #Retrieve only required rows from HSIL and Liver Leaf
 #selected_hsil = vendor_hsil[["Order ID KEY","Truck Number_x","Received Qty_x","Accepted Qty_x"]]
